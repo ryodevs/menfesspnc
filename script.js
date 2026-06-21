@@ -1,8 +1,8 @@
 // ============================================================
 // 🔑 KONFIGURASI
 // ============================================================
-const SUPABASE_URL = "https://wvlxxcttjppmvgrubjme.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2bHh4Y3R0anBwbXZncnViam1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMDQ5MjAsImV4cCI6MjA5MjU4MDkyMH0.1K5BXhsfif12GgDjqm79QkJTCDJ_oaKuW600WY6g7RY.Q_XXJJWldMCw4EScC7u-DLY0oW7uwt8NqRJxfYUJxUk";
+const SUPABASE_URL = "https://vtwcjyyjzvyznezzbydq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0d2NqeXlqenZ5em5lenpieWRxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk5OTY0MiwiZXhwIjoyMDkyNTc1NjQyfQ.Dj_KHV7P1cetGzHCVdGmECVnBFwA3eA80BTfqNmw9xI";
 const SOUNDCLOUD_API_URL = "https://kaizenapi.my.id/api/downloader/soundcloud";
 
 // ============================================================

@@ -20,6 +20,31 @@ let currentAudio = null;
 let activePlayButton = null;
 let isUploading = false;
 
+// Mood options — value stored is plain text (no emoji), icon shown via Font Awesome
+const MOOD_OPTIONS = [
+    { value: 'Bahagia',  icon: 'fa-face-smile' },
+    { value: 'Galau',    icon: 'fa-cloud-rain' },
+    { value: 'Suka',     icon: 'fa-heart' },
+    { value: 'Kesal',    icon: 'fa-face-angry' },
+    { value: 'Maaf',     icon: 'fa-hand-holding-heart' },
+    { value: 'Rindu',    icon: 'fa-moon' },
+    { value: 'Semangat', icon: 'fa-bolt' },
+];
+
+// Maps a stored mood string (old emoji-prefixed or new plain text) to an icon class
+function moodIconFor(moodText) {
+    if (!moodText) return 'fa-face-smile';
+    const clean = moodText.toLowerCase();
+    const found = MOOD_OPTIONS.find(m => clean.includes(m.value.toLowerCase()));
+    return found ? found.icon : 'fa-face-smile';
+}
+
+// Strips any leading emoji/symbol characters from legacy mood strings for display
+function cleanMoodText(moodText) {
+    if (!moodText) return '';
+    return moodText.replace(/^[^\p{L}]+/u, '').trim();
+}
+
 // ============================================================
 // 📡 FUNGSI DATABASE
 // ============================================================
@@ -304,14 +329,14 @@ function showSongSelectionModal(songs, query) {
     `;
     
     modalContent.innerHTML = `
-        <div style="padding: 16px 20px; background: linear-gradient(135deg, #2563eb, #0891b2); color: white;">
+        <div style="padding: 16px 20px; background: #1F2B47; color: #FAF7F0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 1.1rem;">
-                    <i class="fas fa-headphones"></i> Pilih Lagu
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-headphones-simple"></i> Pilih Lagu
                 </h3>
-                <button id="closeModalBtn" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                <button id="closeModalBtn" style="background: none; border: none; color: #FAF7F0; font-size: 1.1rem; cursor: pointer;"><i class="fas fa-xmark"></i></button>
             </div>
-            <p style="margin: 5px 0 0; font-size: 0.75rem; opacity: 0.9;">Hasil pencarian: "${query}"</p>
+            <p style="margin: 6px 0 0; font-size: 0.72rem; opacity: 0.75; font-family: 'JetBrains Mono', monospace;">Hasil pencarian: "${escapeHtml(query)}"</p>
         </div>
         <div id="songListContainer" style="overflow-y: auto; padding: 16px;">
             ${songs.map((song, index) => {
@@ -323,37 +348,38 @@ function showSongSelectionModal(songs, query) {
                     gap: 12px;
                     padding: 12px;
                     margin-bottom: 10px;
-                    background: #eef0f7;
-                    border-radius: 16px;
+                    background: #FAF7F0;
+                    border-radius: 10px;
                     cursor: pointer;
                     transition: all 0.2s;
-                    border: 1px solid #dde1ef;
+                    border: 1.5px solid #DDCFA6;
                 ">
-                    <img src="${song.artwork}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/50?text=No+Image'">
-                    <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 0.85rem; color: #1e1e2e;">${escapeHtml(song.title)}</div>
-                        <div style="font-size: 0.7rem; color: #64748b;">${escapeHtml(song.artist)}</div>
-                        <div style="font-size: 0.6rem; color: #64748b; margin-top: 4px;">
+                    <img src="${song.artwork}" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/50?text=No+Image'">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 700; font-size: 0.85rem; color: #1F2B47;">${escapeHtml(song.title)}</div>
+                        <div style="font-size: 0.7rem; color: #7C7462;">${escapeHtml(song.artist)}</div>
+                        <div style="font-size: 0.6rem; color: #7C7462; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
                             <i class="fas fa-play"></i> ${formatDuration(song.duration_seconds)} &nbsp;|&nbsp;
-                            <i class="fas fa-headphones"></i> ${formatNumber(song.plays)}
+                            <i class="fas fa-headphones-simple"></i> ${formatNumber(song.plays)}
                         </div>
                     </div>
                     <button class="preview-song-btn" data-url="${song.stream_url}" data-title="${escapeHtml(song.title)}" data-artist="${escapeHtml(song.artist)}" data-permalink="${permalink}" style="
-                        background: linear-gradient(135deg, #2563eb, #0891b2);
+                        background: #1F2B47;
                         border: none;
-                        color: white;
+                        color: #FAF7F0;
                         padding: 8px 12px;
                         border-radius: 40px;
                         font-size: 0.7rem;
                         cursor: pointer;
+                        flex-shrink: 0;
                     ">
                         <i class="fas fa-play"></i> Preview
                     </button>
                 </div>
             `}).join('')}
         </div>
-        <div style="padding: 12px 16px; border-top: 1px solid #dde1ef; display: flex; gap: 10px;">
-            <button id="cancelSelectSong" style="flex: 1; padding: 10px; border-radius: 40px; border: 1px solid #dde1ef; background: white; cursor: pointer;">Batal</button>
+        <div style="padding: 12px 16px; border-top: 1px solid #DDCFA6; display: flex; gap: 10px;">
+            <button id="cancelSelectSong" style="flex: 1; padding: 10px; border-radius: 40px; border: 1.5px solid #DDCFA6; background: white; cursor: pointer; color: #1F2B47; font-weight: 500;">Batal</button>
         </div>
     `;
     
@@ -445,7 +471,7 @@ async function playStreamUrl(streamUrl, title, artist, buttonElement = null, per
             activePlayButton.innerHTML = '<i class="fas fa-play"></i> Putar';
         }
         activePlayButton = null;
-        showToast(`⏸️ Dipause: ${title}`, 'fas fa-pause');
+        showToast(`Dipause: ${title}`, 'fas fa-pause');
         return;
     }
     
@@ -488,7 +514,7 @@ async function playStreamUrl(streamUrl, title, artist, buttonElement = null, per
     });
     
     document.body.appendChild(audio);
-    showToast(`🎵 Memutar: ${title}`, 'fas fa-play');
+    showToast(`Memutar: ${title}`, 'fas fa-play');
 }
 
 function playDirectUrl(streamUrl, title, artist, buttonElement = null) {
@@ -503,7 +529,7 @@ function playDirectUrl(streamUrl, title, artist, buttonElement = null) {
             activePlayButton.innerHTML = '<i class="fas fa-play"></i> Putar';
         }
         activePlayButton = null;
-        showToast(`⏸️ Dipause: ${title}`, 'fas fa-pause');
+        showToast(`Dipause: ${title}`, 'fas fa-pause');
         return;
     }
     
@@ -546,7 +572,7 @@ function playDirectUrl(streamUrl, title, artist, buttonElement = null) {
     });
     
     document.body.appendChild(audio);
-    showToast(`🎵 Memutar: ${title}`, 'fas fa-play');
+    showToast(`Memutar: ${title}`, 'fas fa-play');
 }
 
 function playSongFromPost(post, buttonElement = null) {
@@ -615,7 +641,7 @@ function renderCommentSection(postId, commentCount) {
                         <div class="comment-text">${escapeHtml(c.comment)}</div>
                     </div>
                 `).join('')}
-                ${postComments.length === 0 ? '<div style="text-align:center; padding:12px; color:#64748b; font-size:0.7rem;">Belum ada komentar. Jadi yang pertama!</div>' : ''}
+                ${postComments.length === 0 ? '<div class="comment-empty">Belum ada komentar. Jadi yang pertama!</div>' : ''}
             </div>
             <div class="comment-input-area">
                 <input type="text" class="comment-input" id="commentInput_${postId}" placeholder="Tulis komentar anonim...">
@@ -642,7 +668,7 @@ function renderFeed() {
     updateFeedCount();
     
     if (!posts.length) { 
-        list.innerHTML = '<div class="empty-feed"><i class="fas fa-inbox"></i><p>Belum ada suara.<br>Yuk kirim menfess atau request lagu pertama!</p></div>'; 
+        list.innerHTML = '<div class="empty-feed"><i class="fas fa-envelope-open"></i><p>Belum ada suara.<br>Yuk kirim menfess atau request lagu pertama!</p></div>'; 
         return; 
     }
     
@@ -660,11 +686,11 @@ function renderFeed() {
                         <span class="post-time">${timeDisplay}</span>
                     </div>
                     <div class="message-text">${escapeHtml(post.msg)}</div>
-                    ${post.mood ? `<div><span class="mood-tag">${post.mood}</span></div>` : ''}
+                    ${post.mood ? `<div><span class="mood-tag"><i class="fas ${moodIconFor(post.mood)}"></i> ${escapeHtml(cleanMoodText(post.mood))}</span></div>` : ''}
                     <div class="reaction-row">
-                        <button class="reaction" data-emoji="❤️">❤️ ${reacts['❤️'] || 0}</button>
-                        <button class="reaction" data-emoji="💬">💬 ${reacts['💬'] || 0}</button>
-                        <button class="reaction" data-emoji="🎧">🎧 ${reacts['🎧'] || 0}</button>
+                        <button class="reaction" data-emoji="❤️" title="Suka"><i class="fas fa-heart"></i> ${reacts['❤️'] || 0}</button>
+                        <button class="reaction" data-emoji="💬" title="Related"><i class="fas fa-comment-dots"></i> ${reacts['💬'] || 0}</button>
+                        <button class="reaction" data-emoji="🎧" title="Vibes"><i class="fas fa-headphones-simple"></i> ${reacts['🎧'] || 0}</button>
                     </div>
                     ${renderCommentSection(post.id, commentCount)}
                 </div>
@@ -695,11 +721,11 @@ function renderFeed() {
                             <i class="fas fa-play"></i> Putar
                         </button>
                     </div>
-                    ${post.msg ? `<div class="message-text" style="font-size:0.8rem; color:#64748b;">"${escapeHtml(post.msg)}"</div>` : ''}
+                    ${post.msg ? `<div class="message-text" style="font-size:0.8rem; color:var(--muted);">"${escapeHtml(post.msg)}"</div>` : ''}
                     <div class="reaction-row">
-                        <button class="reaction" data-emoji="❤️">❤️ ${reacts['❤️'] || 0}</button>
-                        <button class="reaction" data-emoji="💬">💬 ${reacts['💬'] || 0}</button>
-                        <button class="reaction" data-emoji="🎧">🎧 ${reacts['🎧'] || 0}</button>
+                        <button class="reaction" data-emoji="❤️" title="Suka"><i class="fas fa-heart"></i> ${reacts['❤️'] || 0}</button>
+                        <button class="reaction" data-emoji="💬" title="Related"><i class="fas fa-comment-dots"></i> ${reacts['💬'] || 0}</button>
+                        <button class="reaction" data-emoji="🎧" title="Vibes"><i class="fas fa-headphones-simple"></i> ${reacts['🎧'] || 0}</button>
                     </div>
                     ${renderCommentSection(post.id, commentCount)}
                 </div>
@@ -750,13 +776,13 @@ function addSearchButton() {
     
     const searchBtn = document.createElement('button');
     searchBtn.id = 'searchSoundCloudBtn';
-    searchBtn.innerHTML = '<i class="fas fa-search"></i> Cari Lagu';
+    searchBtn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Cari Lagu';
     searchBtn.style.cssText = `
         margin-top: 8px;
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: #1F2B47;
         border: none;
-        color: white;
-        padding: 8px 16px;
+        color: #FAF7F0;
+        padding: 9px 16px;
         border-radius: 40px;
         font-size: 0.75rem;
         cursor: pointer;
@@ -767,7 +793,7 @@ function addSearchButton() {
     
     searchBtn.onmouseover = () => {
         searchBtn.style.transform = 'translateY(-1px)';
-        searchBtn.style.boxShadow = '0 4px 12px rgba(37,99,235,0.3)';
+        searchBtn.style.boxShadow = '0 4px 12px rgba(31,43,71,0.25)';
     };
     searchBtn.onmouseout = () => {
         searchBtn.style.transform = 'translateY(0)';
@@ -796,14 +822,22 @@ function addSearchButton() {
 initToggle('menfAnonToggle', 'menfNameWrap', () => menfAnonState, (v) => menfAnonState = v);
 initToggle('songAnonToggle', 'songNameWrap', () => songAnonState, (v) => songAnonState = v);
 
-// Mood chips selection
-document.querySelectorAll('#moodContainerMenf .mood-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-        document.querySelectorAll('#moodContainerMenf .mood-chip').forEach(c => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        currentMoodMenf = chip.dataset.mood;
+// Build mood chips (icon-based, no emoji) and wire selection
+function renderMoodChips() {
+    const container = document.getElementById('moodContainerMenf');
+    container.innerHTML = MOOD_OPTIONS.map(m =>
+        `<span class="mood-chip" data-mood="${m.value}"><i class="fas ${m.icon}"></i> ${m.value}</span>`
+    ).join('');
+
+    container.querySelectorAll('.mood-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            container.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
+            chip.classList.add('selected');
+            currentMoodMenf = chip.dataset.mood;
+        });
     });
-});
+}
+renderMoodChips();
 
 // Character counters
 setupCounter('menfMsg', 'menfChar', 500);

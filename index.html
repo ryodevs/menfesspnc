@@ -5,68 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes" />
   <title>Menfess PNC • Politeknik Negeri Cilacap</title>
   <link rel="icon" type="image/png" href="icon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+<div class="airmail-edge"></div>
+
 <div class="hero">
   <div class="pnc-badge">
     <i class="fas fa-university"></i> POLITEKNIK NEGERI CILACAP
   </div>
-  <h1>Campus Menfess</h1>
+  <h1 class="wordmark">Campus Menfess</h1>
   <p class="tagline">© 2026 RachmadJS · API Services: KaizenApi</p>
-  
-  <div class="running-text">
-    <marquee behavior="scroll" direction="left" scrollamount="4" loop="-1">
-      <i class="fas fa-exclamation-triangle"></i> mohon gunakan dengan bijak
-      <i class="fas fa-circle" style="font-size: 3px; vertical-align: middle;"></i> utamakan kesopanan
-      <i class="fas fa-circle" style="font-size: 3px; vertical-align: middle;"></i> jaga privasi orang lain
-      <i class="fas fa-circle" style="font-size: 3px; vertical-align: middle;"></i> think before you type
-      <i class="fas fa-circle" style="font-size: 3px; vertical-align: middle;"></i> thank you for using my project
-      <i class="fas fa-heart" style="color: #2563eb;"></i>
-    </marquee>
+
+  <div class="guideline-strip">
+    <span class="guideline-chip"><i class="fas fa-shield-heart"></i> gunakan dengan bijak</span>
+    <span class="guideline-dot"></span>
+    <span class="guideline-chip"><i class="fas fa-handshake"></i> utamakan kesopanan</span>
+    <span class="guideline-dot"></span>
+    <span class="guideline-chip"><i class="fas fa-user-lock"></i> jaga privasi orang lain</span>
+    <span class="guideline-dot"></span>
+    <span class="guideline-chip"><i class="fas fa-comment-dots"></i> think before you type</span>
   </div>
 </div>
 
 <div class="container">
   <div id="menfessPage" class="page active-page">
-    <div class="glass-card">
+    <div class="letter-card">
       <div class="form-header">
-        <i class="fas fa-envelope-open-text" style="color:var(--blue)"></i>
+        <span class="icon-badge"><i class="fas fa-pen-nib"></i></span>
         <span>Kirim Menfess</span>
       </div>
       <p class="form-desc">Curhat, ucapan terima kasih, atau perasaanmu ke seseorang di PNC — anonim & aman.</p>
 
       <div class="input-field">
-        <label>📌 Kepada (opsional)</label>
+        <label><i class="fas fa-location-dot"></i> Kepada (opsional)</label>
         <input type="text" id="menfTo" placeholder="nama / inisial / kating..." maxlength="50" />
       </div>
       <div class="input-field">
-        <label>💬 Pesan *</label>
+        <label><i class="fas fa-feather-pointed"></i> Pesan *</label>
         <textarea id="menfMsg" rows="3" maxlength="500" placeholder="tuliskan unek-unekmu di sini..."></textarea>
         <div class="char-counter" id="menfChar">0/500</div>
       </div>
       <div class="input-field">
-        <label>🌱 Mood</label>
-        <div class="mood-grid" id="moodContainerMenf">
-          <span class="mood-chip" data-mood="😊 Bahagia">😊 Bahagia</span>
-          <span class="mood-chip" data-mood="😔 Galau">😔 Galau</span>
-          <span class="mood-chip" data-mood="🥰 Suka">🥰 Suka</span>
-          <span class="mood-chip" data-mood="😤 Kesal">😤 Kesal</span>
-          <span class="mood-chip" data-mood="🥺 Maaf">🥺 Maaf</span>
-          <span class="mood-chip" data-mood="💭 Rindu">💭 Rindu</span>
-          <span class="mood-chip" data-mood="🎉 Semangat">🎉 Semangat</span>
-        </div>
+        <label><i class="fas fa-face-smile"></i> Mood</label>
+        <div class="mood-grid" id="moodContainerMenf"></div>
       </div>
 
       <div class="toggle-anon on" id="menfAnonToggle">
-        <div class="toggle-switch"></div>
+        <i class="fas fa-user-secret seal-icon"></i>
         <span class="toggle-label">Kirim secara anonim</span>
+        <div class="toggle-switch"></div>
       </div>
       <div id="menfNameWrap" style="display:none" class="input-field">
-        <label>Nama kamu</label>
+        <label><i class="fas fa-signature"></i> Nama kamu</label>
         <input type="text" id="menfName" placeholder="nama panggilan / alias" maxlength="40" />
       </div>
 
@@ -77,37 +72,38 @@
   </div>
 
   <div id="songfesPage" class="page">
-    <div class="glass-card">
+    <div class="letter-card">
       <div class="form-header">
-        <i class="fas fa-headphones" style="color:var(--cyan)"></i>
+        <span class="icon-badge"><i class="fas fa-headphones-simple"></i></span>
         <span>Kirim Songfess</span>
       </div>
       <p class="form-desc">Minta lagu favoritmu + pesan khusus buat warga PNC. Klik play buat dengerin!</p>
 
       <div class="input-field">
-        <label>🎵 Judul Lagu *</label>
+        <label><i class="fas fa-music"></i> Judul Lagu *</label>
         <input type="text" id="songTitle" placeholder="contoh: Hati-Hati di Jalan" maxlength="80" />
       </div>
       <div class="input-field">
-        <label>🎤 Artis</label>
+        <label><i class="fas fa-microphone"></i> Artis</label>
         <input type="text" id="songArtist" placeholder="nama artis / band (opsional)" maxlength="60" />
       </div>
       <div class="input-field">
-        <label>📝 Pesan / alasan request</label>
+        <label><i class="fas fa-feather-pointed"></i> Pesan / alasan request</label>
         <textarea id="songMsgReq" rows="2" maxlength="280" placeholder="ceritain kenapa lagu ini bermakna..."></textarea>
         <div class="char-counter" id="songMsgChar">0/280</div>
       </div>
       <div class="input-field">
-        <label>🎯 Untuk siapa</label>
+        <label><i class="fas fa-location-dot"></i> Untuk siapa</label>
         <input type="text" id="songTo" placeholder="nama / angkatan / umum" maxlength="50" />
       </div>
 
       <div class="toggle-anon on" id="songAnonToggle">
-        <div class="toggle-switch"></div>
+        <i class="fas fa-user-secret seal-icon"></i>
         <span class="toggle-label">Kirim secara anonim</span>
+        <div class="toggle-switch"></div>
       </div>
       <div id="songNameWrap" style="display:none" class="input-field">
-        <label>Nama kamu</label>
+        <label><i class="fas fa-signature"></i> Nama kamu</label>
         <input type="text" id="songName" placeholder="nama / alias" maxlength="40" />
       </div>
 
@@ -120,7 +116,7 @@
   <div id="feedPage" class="page">
     <div class="feed-header">
       <div class="feed-title">
-        <i class="fas fa-list-ul" style="color:var(--blue)"></i> Feed PNC
+        <span class="icon-badge"><i class="fas fa-inbox"></i></span> Feed PNC
       </div>
       <span class="count-badge" id="feedCountBadge">0 postingan</span>
     </div>
@@ -129,12 +125,12 @@
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-item active" data-nav="menfess"><i class="fas fa-feather-alt"></i><span>Menfess</span></button>
-  <button class="nav-item" data-nav="songfes"><i class="fas fa-headphones"></i><span>Songfess</span></button>
-  <button class="nav-item" data-nav="feed"><i class="fas fa-list-ul"></i><span>Feed</span></button>
+  <button class="nav-item active" data-nav="menfess"><i class="fas fa-pen-nib"></i><span>Menfess</span></button>
+  <button class="nav-item" data-nav="songfes"><i class="fas fa-headphones-simple"></i><span>Songfess</span></button>
+  <button class="nav-item" data-nav="feed"><i class="fas fa-inbox"></i><span>Feed</span></button>
 </nav>
 
-<div id="globalToast" class="toast-message"><i class="fas fa-check-circle" style="color:var(--blue)"></i><span id="toastText"></span></div>
+<div id="globalToast" class="toast-message"><i class="fas fa-check-circle"></i><span id="toastText"></span></div>
 
 <script src="script.js"></script>
 </body>

@@ -3,7 +3,8 @@
 // ============================================================
 const SUPABASE_URL = "https://vtwcjyyjzvyznezzbydq.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0d2NqeXlqenZ5em5lenpieWRxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk5OTY0MiwiZXhwIjoyMDkyNTc1NjQyfQ.Dj_KHV7P1cetGzHCVdGmECVnBFwA3eA80BTfqNmw9xI";
-const SOUNDCLOUD_API_URL = "https://kaizenapi.my.id/api/downloader/soundcloud";
+const APPLE_SEARCH_API = "https://api.kyzzz.xyz/api/music/apple-search";
+const APPLE_API_KEY = "kyzz73905083";
 
 // ============================================================
 // 📦 VARIABEL GLOBAL
@@ -274,25 +275,33 @@ async function uploadToStorage(streamUrl, title) {
 }
 
 // ============================================================
-// 🎵 FUNGSI SOUNDCLOUD
+// 🎵 FUNGSI APPLE MUSIC (pengganti SoundCloud yang sudah angus)
 // ============================================================
 async function searchSoundCloud(query) {
+    // wrapper for backward compat
+    return searchAppleMusic(query);
+}
+async function searchAppleMusic(query) {
     try {
         showToast(`Mencari "${query}"...`, 'fas fa-circle-notch fa-spin');
-        
-        const response = await fetch(`${SOUNDCLOUD_API_URL}?query=${encodeURIComponent(query)}`, {
-            headers: { "accept": "application/json" }
-        });
-        
+        const url = `${APPLE_SEARCH_API}?query=${encodeURIComponent(query)}&limit=8&apikey=${APPLE_API_KEY}`;
+        const response = await fetch(url, { headers: { "accept": "application/json" } });
         if (!response.ok) throw new Error("Gagal mencari lagu");
-        
         const data = await response.json();
-        
-        if (!data.status || !data.result || data.result.length === 0) {
-            throw new Error("Lagu tidak ditemukan");
-        }
-        
-        return data.result;
+        if (!data.status || !data.result || data.result.length === 0) throw new Error("Lagu tidak ditemukan");
+        // normalize to internal shape
+        return data.result.map(r => ({
+            title: r.title,
+            artist: r.artist,
+            artwork: r.cover,
+            cover: r.cover,
+            url: r.url,
+            permalink_url: r.url,
+            // no stream_url / duration from this API
+            stream_url: null,
+            duration_seconds: null,
+            plays: null
+        }));
     } catch (error) {
         console.error(error);
         showToast(`Gagal mencari: ${error.message}`, 'fas fa-exclamation-circle');
@@ -431,19 +440,19 @@ function showSongSelectionModal(songs, query) {
 
 function selectSong(song) {
     const permalink = song.url || song.permalink_url || song.link || song.permalink;
-    
+    const cover = song.cover || song.artwork;
     selectedSongData = {
         title: song.title,
         artist: song.artist,
-        stream_url: song.stream_url,
-        artwork: song.artwork,
-        duration_seconds: song.duration_seconds,
-        permalink_url: permalink
+        stream_url: null,
+        artwork: cover,
+        cover: cover,
+        duration_seconds: null,
+        permalink_url: permalink,
+        apple_url: permalink
     };
-    
     document.getElementById('songTitle').value = song.title;
     document.getElementById('songArtist').value = song.artist;
-    
     showToast(`Lagu "${song.title}" dipilih!`, 'fas fa-check-circle');
 }
 
@@ -580,22 +589,30 @@ function playDirectUrl(streamUrl, title, artist, buttonElement = null) {
 }
 
 function playSongFromPost(post, buttonElement = null) {
-    if (!post.soundcloud_data || !post.soundcloud_data.stream_url) {
-        showToast("Data lagu tidak tersedia", "fas fa-exclamation-circle");
+    const sc = post.soundcloud_data;
+    // Apple Music baru: buka link Apple, legacy SoundCloud: tetap stream
+    const appleUrl = sc?.apple_url || sc?.permalink_url || sc?.url;
+    const cover = sc?.cover || sc?.artwork;
+    // legacy: ada stream_url -> coba play
+    if (sc && sc.stream_url) {
+        const streamUrl = sc.stream_url;
+        const isUploaded = sc.is_uploaded;
+        const permalinkUrl = sc.permalink_url;
+        if (isUploaded) { playDirectUrl(streamUrl, post.title, post.artist, buttonElement); return; }
+        else { playStreamUrl(streamUrl, post.title, post.artist, buttonElement, permalinkUrl); return; }
+    }
+    if (appleUrl) {
+        window.open(appleUrl, '_blank', 'noopener');
+        showToast(`Buka di Apple Music: ${post.title}`, 'fas fa-external-link-alt');
         return;
     }
-    
-    const streamUrl = post.soundcloud_data.stream_url;
-    const title = post.title;
-    const artist = post.artist;
-    const isUploaded = post.soundcloud_data.is_uploaded;
-    const permalinkUrl = post.soundcloud_data.permalink_url;
-    
-    if (isUploaded) {
-        playDirectUrl(streamUrl, title, artist, buttonElement);
-    } else {
-        playStreamUrl(streamUrl, title, artist, buttonElement, permalinkUrl);
+    // fallback: jika post lama tanpa soundcloud_data tapi ada title
+    if (post.title) {
+        const q = encodeURIComponent(post.title + (post.artist ? ' ' + post.artist : ''));
+        window.open(`https://music.apple.com/search?term=${q}`, '_blank', 'noopener');
+        return;
     }
+    showToast("Data lagu tidak tersedia", "fas fa-exclamation-circle");
 }
 
 function playSongFromPostId(postId, buttonElement) {
@@ -700,8 +717,10 @@ function renderFeed() {
                 </div>
             `;
         } else {
-            const hasSoundCloud = post.soundcloud_data && post.soundcloud_data.stream_url;
-            const artwork = hasSoundCloud && post.soundcloud_data.artwork ? post.soundcloud_data.artwork : null;
+            const sc = post.soundcloud_data;
+            const artwork = sc ? (sc.cover || sc.artwork) : null;
+            const hasApple = sc && (sc.apple_url || sc.permalink_url || sc.url);
+            const hasStream = sc && sc.stream_url;
             
             return `
                 <div class="post-card" data-id="${post.id}">
@@ -722,7 +741,7 @@ function renderFeed() {
                             </div>
                         </div>
                         <button class="btn-play" onclick="playSongFromPostId(${post.id}, this)">
-                            Putar
+                            ${hasStream ? 'Putar' : hasApple ? 'Buka' : 'Cari'}
                         </button>
                     </div>
                     ${post.msg ? `<div class="message-text" style="font-size:0.82rem; color:var(--muted);">"${escapeHtml(post.msg)}"</div>` : ''}
@@ -902,17 +921,7 @@ document.getElementById('submitSongfes').addEventListener('click', async () => {
     submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Mengirim...';
     
     try {
-        let finalStreamUrl = selectedSongData?.stream_url;
-        let isUploaded = false;
-        
-        if (selectedSongData && selectedSongData.stream_url) {
-            const uploadedUrl = await uploadToStorage(selectedSongData.stream_url, title);
-            if (uploadedUrl) {
-                finalStreamUrl = uploadedUrl;
-                isUploaded = true;
-            }
-        }
-        
+        // Apple Music: tidak ada stream untuk di-upload, simpan cover+url langsung
         const post = { 
             type: 'songfes', 
             from, 
@@ -923,11 +932,14 @@ document.getElementById('submitSongfes').addEventListener('click', async () => {
             artist: artist || null, 
             reactions: { '❤️': 0, '💬': 0, '🎧': 0 },
             soundcloud_data: selectedSongData ? {
-                stream_url: finalStreamUrl,
-                artwork: selectedSongData.artwork,
-                duration: selectedSongData.duration_seconds,
+                stream_url: null,
+                artwork: selectedSongData.artwork || selectedSongData.cover,
+                cover: selectedSongData.cover || selectedSongData.artwork,
+                duration: null,
                 permalink_url: selectedSongData.permalink_url,
-                is_uploaded: isUploaded
+                apple_url: selectedSongData.apple_url || selectedSongData.permalink_url,
+                url: selectedSongData.apple_url || selectedSongData.permalink_url,
+                is_uploaded: false
             } : null
         };
         
